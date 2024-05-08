@@ -1,27 +1,51 @@
 package org.example.sikulix;
 
 import org.sikuli.script.Image;
-import org.sikuli.script.Match;
 import org.sikuli.script.ObserveEvent;
 import org.sikuli.script.ObserverCallBack;
 import org.sikuli.script.Pattern;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
-import org.sikuli.script.support.Observer;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
-import static org.sikuli.basics.Settings.FOREVER;
+public class TestForImages {
 
-public class ToolForObserver {
-	public static void startObserver(String referenceImagePath,String targetImagePath) throws IOException {
+
+	public static void main(String[] args) {
+		File folder = new File("");
+		File[] listOfFiles = folder.listFiles();
+
+		if (listOfFiles != null) {
+			for (File file : listOfFiles) {
+				if (file.isFile()) {
+					System.out.println("File " + file.getName());
+
+					// 為每個檔案創建一個觀察者
+					Screen screen = new Screen();
+					Pattern pattern = new Pattern(file.getPath());
+
+					screen.onAppear(pattern, new ObserverCallBack() {
+						@Override
+						public void appeared(ObserveEvent event) {
+							System.out.println("Image found: " + file.getName());
+						}
+					});
+
+					screen.observeInBackground();
+				} else if (file.isDirectory()) {
+					System.out.println("Directory " + file.getName());
+				}
+			}
+		} else {
+			System.out.println("The directory is empty or does not exist.");
+		}
 
 		System.out.println("start sikulix observer");
+
 		File referenceImageFile = new File(referenceImagePath);
 		FileInputStream inputStream = new FileInputStream(referenceImageFile);
 
@@ -62,7 +86,7 @@ public class ToolForObserver {
 		region1.onVanish(pattern1,
 				new ObserverCallBack() {
 					@Override
-					public void vanished(ObserveEvent event) {
+					public void vanished( ObserveEvent event) {
 						System.out.println("Image 1 vanished in region 1   :   "+event);
 					}
 				}
@@ -97,6 +121,9 @@ public class ToolForObserver {
 		// 停止觀察者
 		region1.stopObserver();
 		region2.stopObserver();
-	}
-}
 
+		Screen screen = new Screen();
+		screen.stopObserver();
+	}
+
+}

@@ -89,7 +89,7 @@ public class ImageUploadApp extends Application {
                 //String uploadSuccess = ToolLocation.testForTwo(referenceImagePath, targetImagePath);
 
                 try {
-                    ToolForObserver.startObserver(referenceImagePath);
+                    ToolForObserver.startObserver(referenceImagePath,targetImagePath);
                 } catch (IOException ex) {
                     throw new RuntimeException( ex );
                 }
