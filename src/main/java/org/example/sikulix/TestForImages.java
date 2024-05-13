@@ -11,105 +11,76 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class TestForImages {
 
-
-	public static void main(String[] args) {
-		File folder = new File("");
+	//private static final Screen screen = new Screen(1);
+	public static void main(String[] args) throws IOException {
+		File folder = new File("C:\\testimage\\");
 		File[] listOfFiles = folder.listFiles();
+		//System.out.println("start sikulix observer");
+		//
+		//if (listOfFiles != null) {
+		//	for (File file : listOfFiles) {
+		//		if (file.isFile()) {
+		//			BufferedImage bufferedImageR = ImageIO.read(new File(String.valueOf(file)));
+		//			System.out.println("2uu24"+"File input : " + file.getName()+",size : "+bufferedImageR);
+		//
+		//			// 為每個檔案創建一個觀察者
+		//			Screen screen = new Screen(1);
+		//			Pattern pattern = new Pattern(file.getPath());
+		//			//screen.highlight(0.5);
+		//			screen.onAppear(pattern, new ObserverCallBack() {
+		//				@Override
+		//				public void appeared(ObserveEvent event) {
+		//					System.out.println("Image found: " + file.getName());
+		//				}
+		//			});
+		//
+		//			screen.observeInBackground();
+		//		} else if (file.isDirectory()) {
+		//			System.out.println("Directory " + file.getName());
+		//		}
+		//	}
+		//} else {
+		//	System.out.println("The directory is empty or does not exist.");
+		//}
+
+		//File[] listOfFiles = folder.listFiles();
 
 		if (listOfFiles != null) {
+			ExecutorService executor = Executors.newCachedThreadPool();
 			for (File file : listOfFiles) {
 				if (file.isFile()) {
-					System.out.println("File " + file.getName());
+					executor.execute(() -> {
+						try {
+							processFile(file);
 
-					// 為每個檔案創建一個觀察者
-					Screen screen = new Screen();
-					Pattern pattern = new Pattern(file.getPath());
-
-					screen.onAppear(pattern, new ObserverCallBack() {
-						@Override
-						public void appeared(ObserveEvent event) {
-							System.out.println("Image found: " + file.getName());
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
 					});
-
-					screen.observeInBackground();
 				} else if (file.isDirectory()) {
 					System.out.println("Directory " + file.getName());
 				}
 			}
+			try {
+				executor.shutdown();
+				if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+					executor.shutdownNow();
+				}
+			} catch (InterruptedException e) {
+				executor.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
 		} else {
 			System.out.println("The directory is empty or does not exist.");
 		}
-
-		System.out.println("start sikulix observer");
-
-		File referenceImageFile = new File(referenceImagePath);
-		FileInputStream inputStream = new FileInputStream(referenceImageFile);
-
-		BufferedImage bufferedImageR = ImageIO.read(new File(String.valueOf(referenceImageFile)));
-		Image referrenceimage = new Image(bufferedImageR);
-
-		File targetImageFile = new File(targetImagePath);
-
-		BufferedImage bufferedImageT = ImageIO.read(new File(String.valueOf(targetImageFile)));
-		Image targetImag = new Image(bufferedImageT);
-
-		Region region1 = new Screen(1);
-		//Region region1 = new Region( 0, 0, 200, 200);
-		Region region2 = new Screen(1);
-
-		Pattern pattern1 = new Pattern(referrenceimage);
-		Pattern pattern2 = new Pattern(targetImag);
-
-		//region1.onAppear(pattern1,
-		//		new ObserverCallBack() {
-		//			@Override
-		//			public void appeared(ObserveEvent event) {
-		//				System.out.println("Image 1 found in region 1   :   "+event);
-		//			}
-		//		}
-		//);
-		//region1.observe();
-
-		//region1.onChange(50,
-		//		new ObserverCallBack() {
-		//			@Override
-		//			public void changed(ObserveEvent event) {
-		//				System.out.println("onChange 事件偵測:   "+event);
-		//			}
-		//		}
-		//);
-
-		region1.onVanish(pattern1,
-				new ObserverCallBack() {
-					@Override
-					public void vanished( ObserveEvent event) {
-						System.out.println("Image 1 vanished in region 1   :   "+event);
-					}
-				}
-		);
-		region1.observe();
-
-
-		region2.onAppear(pattern2,
-				new ObserverCallBack() {
-					@Override
-					public void appeared(ObserveEvent event) {
-						System.out.println("Image 2 found in region 2   :   "+event);
-					}
-				}
-		);
-		//new thread to observe region2
-		region2.observeInBackground();
-		//region2.observe();
-
-		//region2.onAppear(pattern2, (Match match) -> {
-		//	System.out.println("Image 2 found in region 2");
-		//	// 執行相應的操作
-		//}).observe(60); // observe for 60 seconds
+		System.out.println("end sikulix observer");
 
 		try {
 			System.out.println("等待觀察者搜尋");
@@ -119,11 +90,30 @@ public class TestForImages {
 		}
 
 		// 停止觀察者
-		region1.stopObserver();
-		region2.stopObserver();
+		//region1.stopObserver();
+		//region2.stopObserver();
 
-		Screen screen = new Screen();
+		Screen screen = new Screen(1);
+		System.out.println("new了一個新的screen準備關閉觀察者");
 		screen.stopObserver();
+	}
+	private static void processFile(File file) {
+		try {
+			Screen screen = new Screen(1);
+			BufferedImage bufferedImage = ImageIO.read(file);
+			System.out.println("File input: " + file.getName() + ", size: " + bufferedImage);
+
+			Pattern pattern = new Pattern(file.getPath());
+			screen.onAppear(pattern, new ObserverCallBack() {
+				@Override
+				public void appeared(ObserveEvent event) {
+					System.out.println("Image found: " + file.getName());
+				}
+			});
+			screen.observeInBackground();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
